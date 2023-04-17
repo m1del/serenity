@@ -12,15 +12,22 @@ jobs:
         env:
             BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v2
               with:
+                  ref: master
                   fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
             - name: Install sonar-scanner and build-wrapper
               uses: SonarSource/sonarcloud-github-c-cpp@v1
-            - name: Run build-wrapper
+            - name: Clean build artifacts
               run: |
                   rm -rf build # Clean previous build artifacts
-                  build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make clean && make -j$(nproc) all
+                  make clean
+            - name: Build
+              run: |
+                  make -j$(nproc) all
+            - name: Run build-wrapper
+              run: |
+                  build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make -j$(nproc) all
             - name: Run sonar-scanner
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
